@@ -1,0 +1,53 @@
+CREATE TABLE Books
+(
+    cid INT PRIMARY KEY NOT NULL,
+    title NVARCHAR(20) NOT NULL,
+    annotation NVARCHAR(50),
+    language_code INT NOT NULL,
+    volume_number INT
+)
+
+CREATE TABLE Publications
+(
+    ISBN INT PRIMARY KEY NOT NULL,
+    book_cid INT NOT NULL,
+    twelvemonth INT NOT NULL,
+    publishing_office NVARCHAR(20) NOT NULL,
+    language_code INT NOT NULL,
+    book_type NVARCHAR(30)
+)
+
+CREATE TABLE language_codes
+(
+    language_code INT PRIMARY KEY NOT NULL,
+    lang NVARCHAR(20) NOT NULL
+)
+
+CREATE TABLE Authors
+(
+    cid INT PRIMARY KEY NOT NULL,
+    name NVARCHAR(20) NOT NULL,
+    surname NVARCHAR(20) NOT NULL,
+    patronymic NVARCHAR(20)
+)
+
+CREATE TABLE Authors_and_books
+(
+    book INT NOT NULL,
+    author INT NOT NULL,
+    Unique(book, author)
+)
+
+CREATE TABLE Categories
+(
+    host INT,
+    cid INT PRIMARY KEY NOT NULL,
+    name NVARCHAR(30) NOT NULL
+)
+
+CREATE TABLE Categories_and_books
+(
+    ISBN INT NOT NULL,
+    caid INT NOT NULL,
+    Unique(ISBN, cid)
+)

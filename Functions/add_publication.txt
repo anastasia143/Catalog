@@ -1,0 +1,67 @@
+CREATE PROCEDURE add_publication(@title NVARCHAR(20), @surname NVARCHAR(20), @firstname NVARCHAR(20), @middlename NVARCHAR(20), 
+    @original_lang INT, @publication_lang INT, @volume_number INT, @publising_office NVARCHAR(20), @year INT, @annotation NVARCHAR(50), @book_type NVARCHAR(20))
+AS
+BEGIN
+	-- BOOK
+	DECLARE @book_cid INT
+	IF (EXISTS(SELECT * FROM Books WHERE (title = @title AND volume_number = @volume_number AND language_code = @original_lang)))
+	BEGIN
+		SET @book_cid = (SELECT cid FROM Books WHERE (title = @title AND volume_number = @volume_number AND language_code = @original_lang))
+	END
+	ELSE
+	BEGIN
+		IF EXISTS (SELECT * FROM Books)
+		BEGIN
+			SET @book_cid = (SELECT MAX(cid) FROM Books)
+			SET @book_cid = @book_cid + 1
+		END
+		ELSE
+		BEGIN
+			SET @book_cid = 1
+		END
+		INSERT INTO Books VALUES (@book_cid, @title, @annotation, @original_lang, @volume_number)
+	END
+	
+	--Author
+	DECLARE @author_cid INT
+	IF (EXISTS(SELECT * FROM Authors WHERE (@firstname = name AND @surname = surname)))
+	BEGIN
+		SET @author_cid = (SELECT cid FROM Authors WHERE (@firstname = name AND @surname = surname))
+	END
+	ELSE
+	BEGIN
+		IF EXISTS (SELECT * FROM Authors)
+		BEGIN
+			SET @author_cid = (SELECT MAX(cid) FROM Authors)
+			SET @author_cid = @author_cid + 1
+		END
+		ELSE
+		BEGIN
+			SET @author_cid = 1
+		END
+		INSERT INTO Authors VALUES (@author_cid, @firstname, @surname, @middlename)
+	END
+	
+	INSERT INTO Authors_and_books VALUES (@book_cid, @author_cid)
+	
+	DECLARE @isbn INT
+	IF EXISTS(SELECT * FROM Publications)
+	BEGIN
+		SET @isbn = (SELECT MAX(ISBN) FROM Publications)
+		SET @isbn = @isbn + 1
+	END
+	ELSE
+	BEGIN
+		SET @isbn = 1
+	END
+	INSERT INTO Publications VALUES (@isbn, @book_cid, @year, @publising_office, @publication_lang, @book_type)
+	-- RETURN SCOPE_IDENTITY()
+END
+
+DELETE Books
+  DELETE Authors
+  DELETE Authors_and_books
+  DELETE Publications
+
+
+EXEC add_publication N'Война и мир', N'Толстой', N'Лев', N'Николаевич', 1, 1, 1, N'Новая книга', 2012, N'Классная книга', 'sort cover'
