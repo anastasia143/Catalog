@@ -11,13 +11,14 @@ CREATE TABLE Publications
 (
     ISBN INT PRIMARY KEY NOT NULL,
     book_cid INT NOT NULL,
-    twelvemonth INT NOT NULL,
+    twelvemonth INT,
     publishing_office NVARCHAR(20) NOT NULL,
     language_code INT NOT NULL,
-    book_type NVARCHAR(30)
+    book_type NVARCHAR(30),
+    annotation NVARCHAR(50)
 )
 
-CREATE TABLE language_codes
+CREATE TABLE Language_codes
 (
     language_code INT PRIMARY KEY NOT NULL,
     lang NVARCHAR(20) NOT NULL

@@ -1,0 +1,11 @@
+CREATE TRIGGER publication_addition
+ON Publications
+AFTER INSERT
+AS
+BEGIN
+	UPDATE Publications SET twelvemonth = YEAR(GETDATE()) WHERE (twelvemonth IS NULL)
+	UPDATE Publications SET annotation = (SELECT annotation FROM Books WHERE Publications.book_cid = Books.cid) WHERE (annotation IS NULL)
+END
+
+DELETE Publications
+INSERT INTO Publications (ISBN, book_cid, publishing_office, language_code) VALUES (3, 1, 'Reallwe', 2)
