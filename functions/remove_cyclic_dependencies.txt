@@ -1,0 +1,50 @@
+CREATE PROCEDURE remove_cyclic_dependencies
+AS
+BEGIN
+    DECLARE @minCid INT
+    SET @minCid = (SELECT MIN(cid) FROM Categories)
+    DECLARE @maxCid INT
+    SET @maxCid = (SELECT MAX(cid) FROM Categories)
+    CREATE TABLE #Path
+   (
+      cid INT PRIMARY KEY,
+      order_counter INT NOT NULL
+   )
+   
+   DECLARE @Counter int
+   SET @Counter = @minCid
+   DECLARE @begin INT
+   SET @begin = 0
+
+	WHILE @Counter <= @maxCid
+	BEGIN
+		DECLARE @path_unit INT
+		SET @path_unit = @Counter
+		
+		WHILE(EXISTS (SELECT * FROM Categories WHERE (cid = @path_unit AND NOT(host = NULL))))
+		BEGIN
+			IF(EXISTS (SELECT * FROM #Path WHERE (cid = @path_unit)) AND (@begin = 0))
+			BEGIN
+				DECLARE @extra_directory INT
+                                SET @extra_directory = (SELECT MAX(cid) FROM #Path)
+				SET @Counter = @Counter - 1
+                                UPDATE Categories SET host = 0 WHERE (@extra_directory = cid)
+                                SET @begin = 1
+			END
+			ELSE
+			BEGIN
+				IF(@begin = 0)
+				BEGIN
+					INSERT INTO #Path VALUES (@path_unit)
+					SET @order_counter = @order_counter + 1
+					SET @path_unit = (SELECT host FROM Categories WHERE (cid = @path_unit))
+				END
+			END
+		END
+		SET @Counter = @Counter + 1
+		SET @begin = 0
+		DELETE #Path
+	END
+END
+
+EXEC remove_cyclic_dependencies

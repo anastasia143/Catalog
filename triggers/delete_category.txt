@@ -1,0 +1,16 @@
+CREATE TRIGGER delete_category
+ON Categories
+INSTEAD OF DELETE
+AS
+BEGIN
+	IF(NOT EXISTS (SELECT * FROM Categories_and_books WHERE deleted.cid = cid))
+               DELETE 
+        IF(deleted.host != 0)
+        BEGIN
+            @host = SELECT host FROM deleted
+            UPDATE Categories_and_books SET host = @host WHERE host = (SELECT cid FROM deleted)
+        END
+END
+
+DELETE Publications
+INSERT INTO Publications (ISBN, book_cid, publishing_office, language_code) VALUES (3, 1, 'Reallwe', 2)

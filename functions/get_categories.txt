@@ -1,0 +1,30 @@
+CREATE FUNCTION get_categories(@isbn INT)
+RETURNS @table TABLE (cid INT, name NVARCHAR(30)) AS
+BEGIN
+    DECLARE @path_unit INT
+    SET @path_unit = 0
+    
+    INSERT INTO @table (SELECT cid, name from Categories JOIN Categories_and_books ON Categories.cid = Categories_and_books.cid
+                           WHERE Categories_and_books.isbn = @isbn)
+    DECLARE @count
+    SET @count = SELECT COUNT(*) FROM @table
+
+    DECLARE @counter INT
+    SET @counter = 1
+    WHILE(@counter <= @count)
+    BEGIN
+        @cid = SELECT cid FROM @table LIMIT @counter
+        WHILE(EXISTS SELECT host FROM Categories WHERE cid = @cid)
+        BEGIN
+            @cid = (SELECT host FROM Categories WHERE cid = @host)
+            INSERT INTO @table (SELECT cid, name from Categories
+                           WHERE @cid = cid)
+        END
+         
+    END
+    
+
+    RETURN
+END 
+
+--SELECT * FROM canEat(4)
