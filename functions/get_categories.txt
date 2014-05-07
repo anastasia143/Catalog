@@ -1,30 +1,35 @@
 CREATE FUNCTION get_categories(@isbn INT)
 RETURNS @table TABLE (cid INT, name NVARCHAR(30)) AS
 BEGIN
-    DECLARE @path_unit INT
-    SET @path_unit = 0
-    
-    INSERT INTO @table (SELECT cid, name from Categories JOIN Categories_and_books ON Categories.cid = Categories_and_books.cid
-                           WHERE Categories_and_books.isbn = @isbn)
-    DECLARE @count
-    SET @count = SELECT COUNT(*) FROM @table
+    INSERT INTO @table SELECT Categories.cid, name from Categories JOIN Categories_and_books ON Categories.cid = Categories_and_books.cid
+                           WHERE Categories_and_books.isbn = @isbn
+    DECLARE @minCid INT
+    SET @minCid = (SELECT MIN(cid) FROM @table)
+    DECLARE @maxCid INT
+    SET @maxCid = (SELECT MAX(cid) FROM @table)
 
     DECLARE @counter INT
-    SET @counter = 1
-    WHILE(@counter <= @count)
+    SET @counter = @minCid
+    WHILE(@counter <= @maxCid)
     BEGIN
-        @cid = SELECT cid FROM @table LIMIT @counter
-        WHILE(EXISTS SELECT host FROM Categories WHERE cid = @cid)
+        IF(EXISTS (SELECT * from @table WHERE cid = @counter))
         BEGIN
-            @cid = (SELECT host FROM Categories WHERE cid = @host)
-            INSERT INTO @table (SELECT cid, name from Categories
-                           WHERE @cid = cid)
-        END
-         
+			DECLARE @cid INT
+			SET @cid = @counter
+			WHILE(EXISTS (SELECT host FROM Categories WHERE cid = @cid))
+			BEGIN
+				SET @cid = (SELECT host FROM Categories WHERE cid = @cid)
+				IF (NOT EXISTS (SELECT * FROM @table WHERE cid = @cid))
+				BEGIN
+				   INSERT INTO @table SELECT cid, name from Categories
+							   WHERE @cid = cid
+				END
+			END
+	    END
+	    SET @counter = @counter + 1
     END
     
-
     RETURN
 END 
 
---SELECT * FROM canEat(4)
+SELECT * FROM dbo.get_categories(8)

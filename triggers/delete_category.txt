@@ -3,14 +3,29 @@ ON Categories
 INSTEAD OF DELETE
 AS
 BEGIN
-	IF(NOT EXISTS (SELECT * FROM Categories_and_books WHERE deleted.cid = cid))
-               DELETE 
-        IF(deleted.host != 0)
+    DECLARE @minCid INT
+    SET @minCid = (SELECT MIN(cid) FROM deleted)
+    DECLARE @maxCid INT
+    SET @maxCid = (SELECT MAX(cid) FROM deleted)
+    
+    DECLARE @counter INT
+    SET @counter = @minCid
+    
+    WHILE(@counter <= @maxCid)
+    BEGIN
+        IF(EXISTS (SELECT * from deleted WHERE cid = @counter))
         BEGIN
-            @host = SELECT host FROM deleted
-            UPDATE Categories_and_books SET host = @host WHERE host = (SELECT cid FROM deleted)
+            DECLARE @new_host INT
+            SET @new_host = (SELECT host FROM deleted WHERE (cid = @counter))
+            UPDATE Categories SET host = @new_host WHERE host = @counter
+            DELETE FROM Categories WHERE cid = @counter
+            IF(EXISTS (SELECT * FROM Categories_and_books WHERE cid = @counter))
+            BEGIN
+                UPDATE Categories_and_books SET cid = @new_host WHERE (cid = @counter)
+            END
         END
+        SET @counter = @counter + 1
+    END
 END
 
-DELETE Publications
-INSERT INTO Publications (ISBN, book_cid, publishing_office, language_code) VALUES (3, 1, 'Reallwe', 2)
+DELETE FROM Categories WHERE cid = 24
